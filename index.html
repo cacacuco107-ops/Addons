@@ -1,0 +1,252 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft 1.26.60 Hacker Book Add-On Packager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="p-6 flex flex-col items-center justify-center min-h-screen">
+    <div class="max-w-2xl w-full bg-gray-900 border border-green-500/30 rounded-xl p-6 shadow-2xl space-y-6">
+        <div class="border-b border-green-500/20 pb-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-green-400 flex items-center gap-2">
+                <span>[TERMINAL]</span> Minecraft Bedrock Add-On Builder
+            </h1>
+            <span class="text-xs bg-green-950 text-green-300 border border-green-600/30 px-2 py-1 rounded">v1.26.60 (2026 Spec)</span>
+        </div>
+
+        <p class="text-sm text-gray-400">
+            Este generador empaqueta la estructura completa del Behavior Pack para Minecraft Bedrock, incluyendo la entrega automática del libro al entrar al mundo o perderlo, menú Scripting API estilo terminal y crafteo compatible con Logros de Supervivencia.
+        </p>
+
+        <div class="bg-black/50 border border-gray-800 rounded-lg p-4 text-xs space-y-2">
+            <div class="text-green-400 font-semibold mb-1">Archivos generados en el paquete:</div>
+            <div class="text-gray-300">• manifest.json (Format version 2)</div>
+            <div class="text-gray-300">• scripts/main.js (Scripting API @minecraft/server)</div>
+            <div class="text-gray-300">• items/hacker_book.json</div>
+            <div class="text-gray-300">• recipes/hacker_book_craft.json</div>
+            <div class="text-gray-300">• texts/en_US.lang</div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button id="downloadMcpack" class="flex-1 bg-green-600 hover:bg-green-500 text-black font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg shadow-green-900/40 text-center">
+                Descargar .mcpack (Instalación Directa)
+            </button>
+            <button id="downloadZip" class="flex-1 bg-gray-800 hover:bg-gray-700 text-green-400 border border-green-600/40 font-bold py-3 px-4 rounded-lg transition duration-200 text-center">
+                Descargar .zip (Editar código)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const files = {
+            "manifest.json": JSON.stringify({
+                "format_version": 2,
+                "header": {
+                    "description": "Add-on Hacker Command Book - Achievement Friendly",
+                    "name": "Hacker Book BP",
+                    "uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                    "version": [1, 26, 60],
+                    "min_engine_version": [1, 26, 60]
+                },
+                "modules": [
+                    {
+                        "description": "Scripting Module",
+                        "type": "script",
+                        "language": "javascript",
+                        "entry": "scripts/main.js",
+                        "uuid": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+                        "version": [1, 0, 0]
+                    },
+                    {
+                        "description": "Data Module",
+                        "type": "data",
+                        "uuid": "c3d4e5f6-a78b-9c0d-1e2f-3a4b5c6d7e8f",
+                        "version": [1, 26, 60]
+                    }
+                ],
+                "dependencies": [
+                    {
+                        "module_name": "@minecraft/server",
+                        "version": "1.12.0"
+                    },
+                    {
+                        "module_name": "@minecraft/server-ui",
+                        "version": "1.3.0"
+                    }
+                ]
+            }, null, 2),
+
+            "items/hacker_book.json": JSON.stringify({
+                "format_version": "1.20.50",
+                "minecraft:item": {
+                    "description": {
+                        "identifier": "vexis:hacker_book",
+                        "menu_category": {
+                            "category": "items"
+                        }
+                    },
+                    "components": {
+                        "minecraft:icon": "book_portfolio",
+                        "minecraft:display_name": {
+                            "value": "§4[§c_root@terminal~#§4] §bCyber_Grimoire"
+                        },
+                        "minecraft:max_stack_size": 1,
+                        "minecraft:use_modifiers": {
+                            "use_duration": 0.2,
+                            "movement_modifier": 1.0
+                        }
+                    }
+                }
+            }, null, 2),
+
+            "recipes/hacker_book_craft.json": JSON.stringify({
+                "format_version": "1.20.50",
+                "minecraft:recipe_shaped": {
+                    "description": {
+                        "identifier": "vexis:hacker_book_craft"
+                    },
+                    "tags": ["crafting_table"],
+                    "pattern": [
+                        "IRI",
+                        "DBD",
+                        "IRI"
+                    ],
+                    "key": {
+                        "I": { "item": "minecraft:iron_ingot" },
+                        "R": { "item": "minecraft:redstone" },
+                        "D": { "item": "minecraft:diamond" },
+                        "B": { "item": "minecraft:book" }
+                    },
+                    "result": {
+                        "item": "vexis:hacker_book",
+                        "count": 1
+                    }
+                }
+            }, null, 2),
+
+            "texts/en_US.lang": "item.vexis:hacker_book=§4[§c_root@terminal~#§4] §bCyber_Grimoire\naction.item.use=Execute Terminal\n",
+
+            "scripts/main.js": `import { world, system } from "@minecraft/server";
+import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
+
+world.afterEvents.itemUse.subscribe((event) => {
+    const player = event.source;
+    const itemStack = event.itemStack;
+
+    if (itemStack && itemStack.typeId === "vexis:hacker_book") {
+        openHackerMenu(player);
+    }
+});
+
+function openHackerMenu(player) {
+    const form = new ActionFormData()
+        .title("§0§k||§r §4ROOT_TERMINAL v2.6.6 §0§k||")
+        .body("§aSelect execution vector, operator:")
+        .button("§b[+] Give Item / Arsenal")
+        .button("§e[+] Toggle Time (Day/Night)")
+        .button("§6[+] Weather Control")
+        .button("§c[+] Teleport / Coords")
+        .button("§4[X] Exit Terminal");
+
+    form.show(player).then((response) => {
+        if (response.canceled) return;
+
+        switch (response.selection) {
+            case 0:
+                openItemSpawner(player);
+                break;
+            case 1:
+                const timeForm = new ModalFormData()
+                    .title("Time Control")
+                    .dropdown("Select time:", ["Day", "Night", "Midnight"]);
+                timeForm.show(player).then(res => {
+                    if (res.canceled) return;
+                    if (res.formValues[0] === 0) player.runCommandAsync("time set day");
+                    if (res.formValues[0] === 1) player.runCommandAsync("time set night");
+                    if (res.formValues[0] === 2) player.runCommandAsync("time set midnight");
+                });
+                break;
+            case 2:
+                player.runCommandAsync("weather toggle");
+                break;
+            case 3:
+                player.runCommandAsync("tp @s ~ ~5 ~");
+                break;
+            case 4:
+                break;
+        }
+    });
+}
+
+function openItemSpawner(player) {
+    const itemForm = new ModalFormData()
+        .title("Arsenal Injector")
+        .textField("Item ID (e.g. diamond, netherite_sword):", "minecraft:diamond")
+        .slider("Amount", 1, 64, 1);
+
+    itemForm.show(player).then(res => {
+        if (res.canceled) return;
+        const itemId = res.formValues[0];
+        const amount = res.formValues[1];
+        player.runCommandAsync(\`give @s \${itemId} \${amount}\`);
+    });
+}
+
+system.runInterval(() => {
+    for (const player of world.getAllPlayers()) {
+        let hasBook = false;
+        const inventory = player.getComponent("minecraft:inventory");
+        if (inventory && inventory.container) {
+            for (let i = 0; i < inventory.container.size; i++) {
+                const item = inventory.container.getItem(i);
+                if (item && item.typeId === "vexis:hacker_book") {
+                    hasBook = true;
+                    break;
+                }
+            }
+        }
+        if (!hasBook) {
+            player.runCommandAsync("give @s vexis:hacker_book 1");
+            player.sendMessage("§4[SYS] §cCyber_Grimoire re-injected into inventory.");
+        }
+    }
+}, 100);`
+        };
+
+        async function createZip() {
+            const zip = new JSZip();
+            for (const [filepath, content] of Object.entries(files)) {
+                zip.file(filepath, content);
+            }
+            return await zip.generateAsync({ type: "blob" });
+        }
+
+        document.getElementById("downloadMcpack").addEventListener("click", async () => {
+            const blob = await createZip();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "HackerBook_Addon_1.26.60.mcpack";
+            a.click();
+        });
+
+        document.getElementById("downloadZip").addEventListener("click", async () => {
+            const blob = await createZip();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "HackerBook_Addon_1.26.60.zip";
+            a.click();
+        });
+    </script>
+</body>
+</html>
+```
